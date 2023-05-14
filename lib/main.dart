@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:environment/models/Environment.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,6 +66,18 @@ class _MyHomePageState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    TextField cityField = TextField(
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        hintText: 'Search city',
+      ),
+      onChanged: (text) async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('city', text);
+        _loadEnvironmentData();
+      },
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(city ?? 'Waiting...'),
@@ -72,8 +85,20 @@ class _MyHomePageState extends State<Home> {
       body: SafeArea(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _elements(),
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              cityField,
+              const Spacer(),
+              Expanded(
+                child: SingleChildScrollView(
+                    child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisSize: MainAxisSize.max,
+                  children: _elements(),
+                )),
+              ),
+            ],
           ),
         ),
       ),
@@ -91,17 +116,39 @@ class _MyHomePageState extends State<Home> {
     if (!_loaded) {
       elements = [const Text('No data available yet')];
     } else {
-      elements = [
-        Text(
-          'Current temperature: ${envData['data']['iaqi']['t']['v']}C',
-        ),
-        Text(
-          'Current humidity: ${envData['data']['iaqi']['h']['v']}%',
-        ),
-        Text(
-          'Current pressure: ${envData['data']['iaqi']['p']['v']} hPa',
-        ),
-      ];
+      if (envData['status'] != 'error') {
+        Environment data = Environment.fromJson(envData);
+
+        Image img;
+        if (data.aqi < 51) {
+          img = Image.asset('assets/images/aqi_0.png');
+        } else if (data.aqi < 101) {
+          img = Image.asset('assets/images/aqi_51.png');
+        } else if (data.aqi < 151) {
+          img = Image.asset('assets/images/aqi_101.png');
+        } else if (data.aqi < 201) {
+          img = Image.asset('assets/images/aqi_151.png');
+        } else if (data.aqi < 301) {
+          img = Image.asset('assets/images/aqi_201.png');
+        } else {
+          img = Image.asset('assets/images/aqi_301.png');
+        }
+
+        elements = [
+          img,
+          Text(
+            'Current temperature: ${data.temperature}C',
+          ),
+          Text(
+            'Current humidity: ${data.humidity}%',
+          ),
+          Text(
+            'Current pressure: ${data.pressure} hPa',
+          ),
+        ];
+      } else {
+        elements = [const Text('Unknown city')];
+      }
     }
     return elements;
   }

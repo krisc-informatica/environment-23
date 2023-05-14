@@ -91,3 +91,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  assets:
+    - assets/images/aqi_0.png
+    - assets/images/aqi_51.png
+    - assets/images/aqi_101.png
+    - assets/images/aqi_151.png
+    - assets/images/aqi_201.png
+    - assets/images/aqi_301.png
